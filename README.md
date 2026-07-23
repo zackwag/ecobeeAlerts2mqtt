@@ -43,6 +43,15 @@ services:
       - ./data:/data
 ```
 
+## Releasing
+
+Push a version tag to `main` (e.g. `git tag v1.2.0 && git push origin v1.2.0`). That triggers `.github/workflows/release.yml`, which:
+
+1. Creates a GitHub Release for the tag with auto-generated notes.
+2. Builds the Docker image and pushes `zackwag/ecobeealerts2mqtt:1.2.0` and `:latest` to Docker Hub.
+
+One-time setup: add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token, not your password) as repo secrets under Settings → Secrets and variables → Actions.
+
 ## Notes
 
 - **Stable entities**: ecobee issues a new `acknowledgeRef` each time it raises the same reminder again (e.g. the next filter change), so the `binary_sensor` object_id is derived from the alert's type + text instead, not the ref. That keeps one entity per distinct reminder that just flips `on`/`off` across recurrences, instead of spawning a new entity each time -- easier to build a persistent automation/notification against. `acknowledgeRef` is still published as an attribute for reference.
