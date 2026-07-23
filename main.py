@@ -163,11 +163,25 @@ def main() -> None:
             thermostat_id = thermostat["identifier"]
             thermostat_name = thermostat.get("name", thermostat_id)
 
+            # Figure out which reminders are actually firing right now, keyed
+            # the same way as the equipment loop below, so each object_id is
+            # published exactly once per cycle -- either "on" from an actual
+            # alert or "off" as a baseline, never both (publishing "off" then
+            # "on" for the same firing reminder every cycle would flip the
+            # entity and re-trigger state-change automations on every poll).
+            firing_alerts_by_key: dict[str, dict] = {}
+            for alert in thermostat.get("alerts", []):
+                ack_ref = alert.get("acknowledgeRef")
+                if not ack_ref:
+                    continue
+                alert_number = alert.get("alertNumber")
+                reminder_key = str(alert_number) if alert_number is not None else alert.get("text", "")
+                firing_alerts_by_key[reminder_key] = alert
+
             # Pre-create an entity (defaulting to off) for every enabled
-            # configured reminder, not just ones currently firing, so there's
+            # configured reminder that isn't currently firing, so there's
             # something stable to build a notification against before it's
-            # ever due. The alerts loop below overwrites these to "on" (with
-            # richer attributes) for whichever are actually firing right now.
+            # ever due.
             equipment_settings = thermostat.get("notificationSettings", {}).get("equipment", [])
             for equipment in equipment_settings:
                 if not equipment.get("enabled"):
@@ -176,6 +190,8 @@ def main() -> None:
                 if alert_number is None:
                     continue
                 reminder_key = str(alert_number)
+                if reminder_key in firing_alerts_by_key:
+                    continue
                 name = _REMINDER_NAMES.get(alert_number, equipment.get("type"))
                 object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
                 mqtt_pub.publish_state(
@@ -189,16 +205,9 @@ def main() -> None:
                 )
                 current_object_ids.add(object_id)
 
-            for alert in thermostat.get("alerts", []):
+            for reminder_key, alert in firing_alerts_by_key.items():
                 ack_ref = alert.get("acknowledgeRef")
-                if not ack_ref:
-                    continue
-                # Keyed on alertNumber (stable across recurrences), not
-                # acknowledgeRef, which ecobee rotates every time the same
-                # reminder fires again -- keying on it would spawn a new
-                # entity each time instead of reusing one.
                 alert_number = alert.get("alertNumber")
-                reminder_key = str(alert_number) if alert_number is not None else alert.get("text", "")
                 name = _REMINDER_NAMES.get(alert_number, alert.get("text", "Ecobee Alert"))
                 object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
                 mqtt_pub.publish_state(
