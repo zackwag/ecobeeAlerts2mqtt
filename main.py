@@ -46,6 +46,22 @@ _REMINDER_NAMES = {
     3140: "HVAC Maintenance",
 }
 
+# Maps ecobee's configured-equipment-reminder type (from
+# thermostat.notificationSettings.equipment[].type) to the same alertNumber
+# it fires under once due, so the entity created ahead of time (defaulting to
+# off) and the one the actual alert updates are the same entity.
+_EQUIPMENT_TYPE_TO_ALERT_NUMBER = {
+    "hvac": 3140,
+    "furnaceFilter": 3130,
+    "humidifierFilter": 3131,
+    "dehumidifierFilter": 3133,
+    "ventilator": 3132,
+    "ac": 3136,
+    "airFilter": 3137,
+    "airCleaner": 3138,
+    "uvLamp": 3135,
+}
+
 
 def _require_env(name: str) -> str:
     value = os.environ.get(name)
@@ -146,6 +162,33 @@ def main() -> None:
         for thermostat in thermostats:
             thermostat_id = thermostat["identifier"]
             thermostat_name = thermostat.get("name", thermostat_id)
+
+            # Pre-create an entity (defaulting to off) for every enabled
+            # configured reminder, not just ones currently firing, so there's
+            # something stable to build a notification against before it's
+            # ever due. The alerts loop below overwrites these to "on" (with
+            # richer attributes) for whichever are actually firing right now.
+            equipment_settings = thermostat.get("notificationSettings", {}).get("equipment", [])
+            for equipment in equipment_settings:
+                if not equipment.get("enabled"):
+                    continue
+                alert_number = _EQUIPMENT_TYPE_TO_ALERT_NUMBER.get(equipment.get("type"))
+                if alert_number is None:
+                    continue
+                reminder_key = str(alert_number)
+                name = _REMINDER_NAMES.get(alert_number, equipment.get("type"))
+                object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
+                mqtt_pub.publish_state(
+                    object_id,
+                    is_on=False,
+                    attributes={
+                        "alert_number": alert_number,
+                        "remind_me_date": equipment.get("remindMeDate"),
+                        "filter_last_changed": equipment.get("filterLastChanged"),
+                    },
+                )
+                current_object_ids.add(object_id)
+
             for alert in thermostat.get("alerts", []):
                 ack_ref = alert.get("acknowledgeRef")
                 if not ack_ref:

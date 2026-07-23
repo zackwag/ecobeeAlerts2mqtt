@@ -99,6 +99,7 @@ class EcobeeClient:
                 "selectionType": "registered",
                 "selectionMatch": "",
                 "includeAlerts": True,
+                "includeNotificationSettings": True,
             }
         }
         resp = requests.get(
