@@ -27,18 +27,20 @@ class MqttPublisher:
         self.client.connect(host, port, keepalive=60)
         self.client.loop_start()
 
-    def publish_discovery(self, thermostat_id: str, thermostat_name: str, reminder_key: str, alert: dict) -> str:
+    def publish_discovery(self, thermostat_id: str, thermostat_name: str, reminder_key: str, name: str) -> str:
         """Publish (or refresh) the discovery config for one reminder. Returns its object_id.
 
-        reminder_key must stay stable across recurrences of the same reminder (e.g. alert
-        type + text) rather than ecobee's acknowledgeRef, which rotates every time the same
-        reminder fires again -- keying on it would spawn a new entity each time.
+        reminder_key must stay stable across recurrences of the same reminder (e.g.
+        alertNumber) rather than ecobee's acknowledgeRef, which rotates every time the
+        same reminder fires again -- keying on it would spawn a new entity each time.
         """
         object_id = f"ecobee_alert_{thermostat_id}_{_slugify(reminder_key)}"
         state_topic = f"{self.topic_prefix}/{object_id}/state"
         config_topic = f"{self.discovery_prefix}/binary_sensor/{object_id}/config"
         payload = {
-            "name": alert.get("text", "Ecobee Reminder"),
+            "name": name,
+            "has_entity_name": True,
+            "object_id": object_id,
             "unique_id": object_id,
             "state_topic": state_topic,
             "payload_on": "ON",

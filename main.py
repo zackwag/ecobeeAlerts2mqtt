@@ -29,6 +29,23 @@ from mqtt_publisher import MqttPublisher
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 _LOGGER = logging.getLogger("ecobeeAlerts2mqtt")
 
+# ecobee's alertNumber is a fixed numeric code (see ecobee API docs, Alert
+# Object) that's stable across recurrences of the same reminder, unlike
+# acknowledgeRef or the free-text alert body. This maps the maintenance-
+# reminder range to the same short names ecobee's own app uses.
+_REMINDER_NAMES = {
+    3130: "Furnace Filter",
+    3131: "Humidifier Filter",
+    3132: "Ventilator",
+    3133: "Dehumidifier Filter",
+    3134: "Economizer",
+    3135: "UV Lamp",
+    3136: "AC Maintenance",
+    3137: "Air Filter",
+    3138: "Air Cleaner",
+    3140: "HVAC Maintenance",
+}
+
 
 def _require_env(name: str) -> str:
     value = os.environ.get(name)
@@ -133,19 +150,23 @@ def main() -> None:
                 ack_ref = alert.get("acknowledgeRef")
                 if not ack_ref:
                     continue
-                # Keyed on alert type + text (stable across recurrences), not
+                # Keyed on alertNumber (stable across recurrences), not
                 # acknowledgeRef, which ecobee rotates every time the same
                 # reminder fires again -- keying on it would spawn a new
                 # entity each time instead of reusing one.
-                reminder_key = f"{alert.get('alertType', '')}_{alert.get('text', '')}"
-                object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, alert)
+                alert_number = alert.get("alertNumber")
+                reminder_key = str(alert_number) if alert_number is not None else alert.get("text", "")
+                name = _REMINDER_NAMES.get(alert_number, alert.get("text", "Ecobee Alert"))
+                object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
                 mqtt_pub.publish_state(
                     object_id,
                     is_on=True,
                     attributes={
                         "date": alert.get("date"),
                         "time": alert.get("time"),
+                        "text": alert.get("text"),
                         "alert_type": alert.get("alertType"),
+                        "alert_number": alert_number,
                         "severity": alert.get("severity"),
                         "acknowledge_ref": ack_ref,
                     },
