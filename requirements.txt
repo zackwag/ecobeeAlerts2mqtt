@@ -1,2 +1,2 @@
 requests>=2.31
-paho-mqtt>=1.6,<2.0
+paho-mqtt>=2.1.0,<3.0
