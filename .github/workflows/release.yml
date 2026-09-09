@@ -32,7 +32,7 @@ jobs:
 
       - name: Derive image tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: zackwag/ecobeealerts2mqtt
           tags: |
