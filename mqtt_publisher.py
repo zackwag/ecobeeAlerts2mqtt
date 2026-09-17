@@ -1,4 +1,5 @@
 """MQTT publishing helpers using Home Assistant's MQTT discovery convention."""
+
 from __future__ import annotations
 
 import json
@@ -27,7 +28,9 @@ class MqttPublisher:
         self.client.connect(host, port, keepalive=60)
         self.client.loop_start()
 
-    def publish_discovery(self, thermostat_id: str, thermostat_name: str, reminder_key: str, name: str) -> str:
+    def publish_discovery(
+        self, thermostat_id: str, thermostat_name: str, reminder_key: str, name: str
+    ) -> str:
         """Publish (or refresh) the discovery config for one reminder. Returns its object_id.
 
         reminder_key must stay stable across recurrences of the same reminder (e.g.

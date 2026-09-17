@@ -1,6 +1,4 @@
 import json
-import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,7 +10,6 @@ from main import (
     _require_env,
     _save_token,
 )
-
 
 # --- _require_env ---
 
@@ -104,33 +101,44 @@ class TestAlertProcessing:
         MockPub.return_value = mock_pub
         mock_pub.publish_discovery.return_value = "ecobee_alert_t1_3130"
 
-        mock_client.get_thermostats_with_alerts.return_value = [{
-            "identifier": "t1",
-            "name": "Living Room",
-            "alerts": [{
-                "acknowledgeRef": "ack-1",
-                "alertNumber": 3130,
-                "text": "Change filter",
-                "alertType": "reminder",
-                "date": "2025-01-01",
-                "time": "12:00",
-                "severity": 2,
-            }],
-            "notificationSettings": {"equipment": []},
-        }]
+        mock_client.get_thermostats_with_alerts.return_value = [
+            {
+                "identifier": "t1",
+                "name": "Living Room",
+                "alerts": [
+                    {
+                        "acknowledgeRef": "ack-1",
+                        "alertNumber": 3130,
+                        "text": "Change filter",
+                        "alertType": "reminder",
+                        "date": "2025-01-01",
+                        "time": "12:00",
+                        "severity": 2,
+                    }
+                ],
+                "notificationSettings": {"equipment": []},
+            }
+        ]
 
         from main import main
+
         with pytest.raises(StopIteration):
             main()
 
         mock_pub.publish_state.assert_called()
-        state_calls = [c for c in mock_pub.publish_state.call_args_list if c[1].get("is_on") is True or (c[0] and len(c[0]) > 1 and c[0][1] is True)]
+        state_calls = [
+            c
+            for c in mock_pub.publish_state.call_args_list
+            if c[1].get("is_on") is True or (c[0] and len(c[0]) > 1 and c[0][1] is True)
+        ]
         assert len(state_calls) >= 1
 
     @patch("main.time.sleep", side_effect=StopIteration)
     @patch("main.MqttPublisher")
     @patch("main.EcobeeClient")
-    def test_equipment_without_alert_published_as_off(self, MockClient, MockPub, mock_sleep, monkeypatch):
+    def test_equipment_without_alert_published_as_off(
+        self, MockClient, MockPub, mock_sleep, monkeypatch
+    ):
         monkeypatch.setenv("ECOBEE_API_KEY", "key")
         monkeypatch.setenv("MQTT_HOST", "mqtt")
         monkeypatch.setenv("ECOBEE_REFRESH_TOKEN", "rt")
@@ -143,20 +151,34 @@ class TestAlertProcessing:
         MockPub.return_value = mock_pub
         mock_pub.publish_discovery.return_value = "ecobee_alert_t1_3130"
 
-        mock_client.get_thermostats_with_alerts.return_value = [{
-            "identifier": "t1",
-            "name": "Living Room",
-            "alerts": [],
-            "notificationSettings": {
-                "equipment": [{"type": "furnaceFilter", "enabled": True, "remindMeDate": "2025-06-01", "filterLastChanged": "2025-01-01"}]
-            },
-        }]
+        mock_client.get_thermostats_with_alerts.return_value = [
+            {
+                "identifier": "t1",
+                "name": "Living Room",
+                "alerts": [],
+                "notificationSettings": {
+                    "equipment": [
+                        {
+                            "type": "furnaceFilter",
+                            "enabled": True,
+                            "remindMeDate": "2025-06-01",
+                            "filterLastChanged": "2025-01-01",
+                        }
+                    ]
+                },
+            }
+        ]
 
         from main import main
+
         with pytest.raises(StopIteration):
             main()
 
-        off_calls = [c for c in mock_pub.publish_state.call_args_list if c[1].get("is_on") is False or (c[0] and len(c[0]) > 1 and c[0][1] is False)]
+        off_calls = [
+            c
+            for c in mock_pub.publish_state.call_args_list
+            if c[1].get("is_on") is False or (c[0] and len(c[0]) > 1 and c[0][1] is False)
+        ]
         assert len(off_calls) >= 1
 
     @patch("main.time.sleep", side_effect=[None, StopIteration])
@@ -193,11 +215,16 @@ class TestAlertProcessing:
         ]
 
         from main import main
+
         with pytest.raises(StopIteration):
             main()
 
         last_publish_state = mock_pub.publish_state.call_args_list[-1]
-        assert last_publish_state[1].get("is_on") is False or (last_publish_state[0] and len(last_publish_state[0]) > 1 and last_publish_state[0][1] is False)
+        assert last_publish_state[1].get("is_on") is False or (
+            last_publish_state[0]
+            and len(last_publish_state[0]) > 1
+            and last_publish_state[0][1] is False
+        )
 
     @patch("main.time.sleep", side_effect=StopIteration)
     @patch("main.MqttPublisher")
@@ -214,16 +241,19 @@ class TestAlertProcessing:
         mock_pub = MagicMock()
         MockPub.return_value = mock_pub
 
-        mock_client.get_thermostats_with_alerts.return_value = [{
-            "identifier": "t1",
-            "name": "T",
-            "alerts": [],
-            "notificationSettings": {
-                "equipment": [{"type": "furnaceFilter", "enabled": False}]
-            },
-        }]
+        mock_client.get_thermostats_with_alerts.return_value = [
+            {
+                "identifier": "t1",
+                "name": "T",
+                "alerts": [],
+                "notificationSettings": {
+                    "equipment": [{"type": "furnaceFilter", "enabled": False}]
+                },
+            }
+        ]
 
         from main import main
+
         with pytest.raises(StopIteration):
             main()
 
@@ -248,8 +278,10 @@ class TestAlertProcessing:
         MockPub.return_value = mock_pub
 
         from main import main
+
         with pytest.raises(StopIteration):
             main()
 
-        data = json.loads(open(token_file).read())
+        with open(token_file) as f:
+            data = json.load(f)
         assert data["refresh_token"] == "new-rt"

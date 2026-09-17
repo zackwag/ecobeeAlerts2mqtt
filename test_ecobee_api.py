@@ -2,7 +2,6 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
 
 from ecobee_api import (
     EcobeeApiError,
@@ -30,12 +29,14 @@ class TestRequestPin:
     def test_success(self, mock_get):
         mock_get.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "ecobeePin": "abc1",
-                "code": "auth-code-123",
-                "interval": 30,
-                "expires_in": 900,
-            }),
+            json=MagicMock(
+                return_value={
+                    "ecobeePin": "abc1",
+                    "code": "auth-code-123",
+                    "interval": 30,
+                    "expires_in": 900,
+                }
+            ),
         )
         client = EcobeeClient("my-key")
         reg = client.request_pin()
@@ -64,11 +65,13 @@ class TestCompletePinAuth:
     def test_success(self, mock_post, client_no_token):
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "access_token": "at-1",
-                "refresh_token": "rt-1",
-                "expires_in": 3600,
-            }),
+            json=MagicMock(
+                return_value={
+                    "access_token": "at-1",
+                    "refresh_token": "rt-1",
+                    "expires_in": 3600,
+                }
+            ),
         )
         client_no_token.complete_pin_auth("auth-code")
         assert client_no_token.access_token == "at-1"
@@ -101,11 +104,13 @@ class TestRefresh:
     def test_success(self, mock_post, client):
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "access_token": "new-at",
-                "refresh_token": "new-rt",
-                "expires_in": 3600,
-            }),
+            json=MagicMock(
+                return_value={
+                    "access_token": "new-at",
+                    "refresh_token": "new-rt",
+                    "expires_in": 3600,
+                }
+            ),
         )
         client._refresh()
         assert client.access_token == "new-at"
@@ -130,11 +135,13 @@ class TestRefresh:
 
 class TestStoreTokens:
     def test_stores_values(self, client):
-        client._store_tokens({
-            "access_token": "a",
-            "refresh_token": "r",
-            "expires_in": 7200,
-        })
+        client._store_tokens(
+            {
+                "access_token": "a",
+                "refresh_token": "r",
+                "expires_in": 7200,
+            }
+        )
         assert client.access_token == "a"
         assert client.refresh_token == "r"
         assert client._access_token_expires_at > time.time()
@@ -155,11 +162,13 @@ class TestEnsureAccessToken:
         client._access_token_expires_at = 0
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "access_token": "new",
-                "refresh_token": "rt",
-                "expires_in": 3600,
-            }),
+            json=MagicMock(
+                return_value={
+                    "access_token": "new",
+                    "refresh_token": "rt",
+                    "expires_in": 3600,
+                }
+            ),
         )
         token = client._ensure_access_token()
         assert token == "new"
@@ -176,11 +185,13 @@ class TestEnsureAccessToken:
         client.access_token = None
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "access_token": "fresh",
-                "refresh_token": "rt",
-                "expires_in": 3600,
-            }),
+            json=MagicMock(
+                return_value={
+                    "access_token": "fresh",
+                    "refresh_token": "rt",
+                    "expires_in": 3600,
+                }
+            ),
         )
         assert client._ensure_access_token() == "fresh"
 
@@ -215,11 +226,13 @@ class TestGetThermostatsWithAlerts:
         mock_get.side_effect = [first_resp, second_resp]
         mock_post.return_value = MagicMock(
             status_code=200,
-            json=MagicMock(return_value={
-                "access_token": "new-at",
-                "refresh_token": "new-rt",
-                "expires_in": 3600,
-            }),
+            json=MagicMock(
+                return_value={
+                    "access_token": "new-at",
+                    "refresh_token": "new-rt",
+                    "expires_in": 3600,
+                }
+            ),
         )
         result = client.get_thermostats_with_alerts()
         assert result == [{"identifier": "t1"}]

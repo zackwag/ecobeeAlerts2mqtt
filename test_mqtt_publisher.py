@@ -5,7 +5,6 @@ import pytest
 
 from mqtt_publisher import MqttPublisher, _slugify
 
-
 # --- _slugify ---
 
 
@@ -118,7 +117,9 @@ class TestPublishDiscovery:
 
 class TestPublishState:
     def test_on(self, publisher):
-        publisher.publish_state("ecobee_alert_t1_3130", is_on=True, attributes={"date": "2025-01-01"})
+        publisher.publish_state(
+            "ecobee_alert_t1_3130", is_on=True, attributes={"date": "2025-01-01"}
+        )
         calls = publisher.client.publish.call_args_list
         state_call = calls[0]
         attrs_call = calls[1]
