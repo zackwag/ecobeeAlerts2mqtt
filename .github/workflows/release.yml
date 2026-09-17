@@ -9,16 +9,6 @@ permissions:
   contents: write
 
 jobs:
-  github-release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v3
-        with:
-          generate_release_notes: true
-
   docker-publish:
     runs-on: ubuntu-latest
     steps:
