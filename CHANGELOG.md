@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/zackwag/ecobeeAlerts2mqtt/compare/v1.1.1...v1.2.0) (2026-09-17)
+
+
+### Features
+
+* **ci:** add ruff lint + format check ([#15](https://github.com/zackwag/ecobeeAlerts2mqtt/issues/15)) ([343a9e8](https://github.com/zackwag/ecobeeAlerts2mqtt/commit/343a9e825f7ec970aaa689da8b3ddb4471dd1643))
+
 ## [1.1.1](https://github.com/zackwag/ecobeeAlerts2mqtt/compare/v1.1.0...v1.1.1) (2026-09-17)
 
 
