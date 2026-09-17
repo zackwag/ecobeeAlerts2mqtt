@@ -15,6 +15,7 @@ Env vars (all required unless noted):
   POLL_INTERVAL_SECONDS     optional, default 300
   TOKEN_FILE_PATH           optional, default "/data/ecobee_token.json"
 """
+
 from __future__ import annotations
 
 import json
@@ -92,7 +93,9 @@ def _bootstrap_auth(client: EcobeeClient, token_file_path: str) -> None:
     _LOGGER.info("ecobee authorization required")
     _LOGGER.info("Go to ecobee.com -> My Apps -> Add Application")
     _LOGGER.info("Enter this PIN: %s", registration.ecobee_pin)
-    _LOGGER.info("Waiting for you to authorize (checking every %ss)...", registration.interval_seconds)
+    _LOGGER.info(
+        "Waiting for you to authorize (checking every %ss)...", registration.interval_seconds
+    )
     _LOGGER.info("=" * 60)
 
     deadline = time.time() + registration.expires_in_seconds
@@ -175,7 +178,9 @@ def main() -> None:
                 if not ack_ref:
                     continue
                 alert_number = alert.get("alertNumber")
-                reminder_key = str(alert_number) if alert_number is not None else alert.get("text", "")
+                reminder_key = (
+                    str(alert_number) if alert_number is not None else alert.get("text", "")
+                )
                 firing_alerts_by_key[reminder_key] = alert
 
             # Pre-create an entity (defaulting to off) for every enabled
@@ -193,7 +198,9 @@ def main() -> None:
                 if reminder_key in firing_alerts_by_key:
                     continue
                 name = _REMINDER_NAMES.get(alert_number, equipment.get("type"))
-                object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
+                object_id = mqtt_pub.publish_discovery(
+                    thermostat_id, thermostat_name, reminder_key, name
+                )
                 mqtt_pub.publish_state(
                     object_id,
                     is_on=False,
@@ -209,7 +216,9 @@ def main() -> None:
                 ack_ref = alert.get("acknowledgeRef")
                 alert_number = alert.get("alertNumber")
                 name = _REMINDER_NAMES.get(alert_number, alert.get("text", "Ecobee Alert"))
-                object_id = mqtt_pub.publish_discovery(thermostat_id, thermostat_name, reminder_key, name)
+                object_id = mqtt_pub.publish_discovery(
+                    thermostat_id, thermostat_name, reminder_key, name
+                )
                 mqtt_pub.publish_state(
                     object_id,
                     is_on=True,

@@ -1,4 +1,5 @@
 """Minimal synchronous ecobee API client: PIN auth, token refresh, read alerts."""
+
 from __future__ import annotations
 
 import json
