@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.2](https://github.com/zackwag/ecobeeAlerts2mqtt/compare/v1.2.1...v1.2.2) (2026-11-11)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump python from 3.14-slim to 3.15-slim ([#24](https://github.com/zackwag/ecobeeAlerts2mqtt/issues/24)) ([096d27c](https://github.com/zackwag/ecobeeAlerts2mqtt/commit/096d27c0cba47166b35a7b3d0aae45d37927d12d))
+* **deps:** update paho-mqtt requirement ([0e97aac](https://github.com/zackwag/ecobeeAlerts2mqtt/commit/0e97aac911d8b46f435fd2ff0d4e9a966cc33ac7))
+* **deps:** update paho-mqtt requirement from &lt;3.0,&gt;=2.1.0 to &gt;=2.2.0,&lt;3.0 ([#26](https://github.com/zackwag/ecobeeAlerts2mqtt/issues/26)) ([0e97aac](https://github.com/zackwag/ecobeeAlerts2mqtt/commit/0e97aac911d8b46f435fd2ff0d4e9a966cc33ac7))
+* fix dependabot commit-message prefixes for conventional commits ([#23](https://github.com/zackwag/ecobeeAlerts2mqtt/issues/23)) ([d014ecf](https://github.com/zackwag/ecobeeAlerts2mqtt/commit/d014ecfb6008bf97019ac3be864904ab90a501b7))
+
 ## [1.2.1](https://github.com/zackwag/ecobeeAlerts2mqtt/compare/v1.2.0...v1.2.1) (2026-10-10)
 
 
